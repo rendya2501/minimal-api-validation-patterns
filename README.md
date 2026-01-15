@@ -15,7 +15,7 @@ ASP.NET Core Minimal API ‚É‚¨‚¯‚é FluentValidation ‚ÌÀ‘•ƒpƒ^[ƒ“”äŠrƒvƒƒWƒFƒNƒ
 - CQRS ƒpƒ^[ƒ“‚Æ‘Š«‚ª—Ç‚¢
 
 ## ‹ZpƒXƒ^ƒbƒN
-- ASP.NET Core 8.0 Minimal API
+- ASP.NET Core 10 Minimal API
 - FluentValidation
 - MediatR
 - Carter
@@ -30,14 +30,14 @@ ASP.NET Core Minimal API ‚É‚¨‚¯‚é FluentValidation ‚ÌÀ‘•ƒpƒ^[ƒ“”äŠrƒvƒƒWƒFƒNƒ
 ## Šeƒpƒ^[ƒ“‚Ì“Á’¥
 
 ### Filter Pattern
-- ? ƒVƒ“ƒvƒ‹
-- ? Minimal API ‚ÉÅ“K‰»
-- ? MediatR •s—v‚Èê‡‚Ì‘I‘ğˆ
+- ƒVƒ“ƒvƒ‹
+- Minimal API ‚ÉÅ“K‰»
+- MediatR •s—v‚Èê‡‚Ì‘I‘ğˆ
 
 ### Pipeline Behavior Pattern
-- ? CQRS ‚Æ‚Ì“‡
-- ? ‰¡’f“IŠÖS–‚Ì“ˆê
-- ? ‚â‚â•¡G
+- CQRS ‚Æ‚Ì“‡
+- ‰¡’f“IŠÖS–‚Ì“ˆê
+- ‚â‚â•¡G
 
 ## Ql
 
