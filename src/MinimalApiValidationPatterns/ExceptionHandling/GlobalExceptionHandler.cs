@@ -1,6 +1,8 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
+using System.Text.Json;
 
 namespace MinimalApiValidationPatterns.ExceptionHandling;
 
@@ -40,13 +42,14 @@ public class GlobalExceptionHandler(
             errorContext,
             exception
         );
-
+   
         httpContext.Response.StatusCode = errorContext.StatusCode;
-        httpContext.Response.ContentType = "application/problem+json";
+        httpContext.Response.ContentType = MediaTypeNames.Application.ProblemJson;
 
-        await httpContext.Response.WriteAsJsonAsync(
+        await JsonSerializer.SerializeAsync(
+            httpContext.Response.Body,
             problemDetails,
-            cancellationToken
+            cancellationToken: cancellationToken
         );
 
         return true;
