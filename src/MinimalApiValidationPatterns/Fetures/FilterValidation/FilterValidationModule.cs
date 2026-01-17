@@ -7,7 +7,6 @@ using MinimalApiValidationPatterns.Filters;
 
 namespace MinimalApiValidationPatterns.Fetures.FilterValidation;
 
-
 public sealed class FilterValidationModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)

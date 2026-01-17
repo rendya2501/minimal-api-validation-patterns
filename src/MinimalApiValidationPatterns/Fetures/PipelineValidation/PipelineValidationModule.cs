@@ -7,7 +7,6 @@ using MinimalApiValidationPatterns.Entities;
 
 namespace MinimalApiValidationPatterns.Fetures.PipelineValidation;
 
-
 public sealed class PipelineValidationModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
