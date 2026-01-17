@@ -13,7 +13,7 @@ public sealed class PipelineValidationModule : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var endpoints = app.MapGroup("/pipeline-behavior-posts")
-            .WithTags("PipelineBehavior");
+            .WithTags("PipelineValidation");
 
         endpoints.MapGet("/", GetPosts)
             .WithSummary("Get all posts");
@@ -30,16 +30,18 @@ public sealed class PipelineValidationModule : ICarterModule
 
     #region GetAll
 
-    public record GetAllGamesQuery() : IRequest<IEnumerable<GetPostsResponse>>;
-    public record GetPostsResponse(Guid Id, string Title, string Content);
-    public class GetPostsHandler(InMemoryDatabase database) : IRequestHandler<GetAllGamesQuery, IEnumerable<GetPostsResponse>>
+    public record GetAllGamesQuery() : IRequest<GetPostsResponse>;
+    public record PostResponse(Guid Id, string Title, string Content);
+    public record GetPostsResponse(IEnumerable<PostResponse> Posts);
+
+    public class GetPostsHandler(InMemoryDatabase database) : IRequestHandler<GetAllGamesQuery, GetPostsResponse>
     {
-        public async Task<IEnumerable<GetPostsResponse>> Handle(GetAllGamesQuery query, CancellationToken ct)
+        public async Task<GetPostsResponse> Handle(GetAllGamesQuery query, CancellationToken ct)
         {
-            return database.Posts.Select(s => new GetPostsResponse(s.Id, s.Title, s.Content));
+            return new GetPostsResponse(database.Posts.Select(s => new PostResponse(s.Id, s.Title, s.Content)));
         }
     }
-    public static async Task<Ok<IEnumerable<GetPostsResponse>>> GetPosts(ISender sender, CancellationToken ct)
+    public static async Task<Ok<GetPostsResponse>> GetPosts(ISender sender, CancellationToken ct)
     {
         var result = await sender.Send(new GetAllGamesQuery(), ct);
         return TypedResults.Ok(result);
