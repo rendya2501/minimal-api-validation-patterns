@@ -9,6 +9,9 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+/// <summary>
+/// サービスコンテナの設定
+/// </summary>
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCarter();
@@ -22,14 +25,15 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 });
 
-builder.Services.AddSingleton<InMemoryDatabase>();
+// FluentValidation: バリデーション定義ライブラリ
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// FluentValidationの設定
-builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
-// Exception Handlerの設定
+// グローバル例外ハンドラー
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+
+// インメモリデータベース (シングルトン)
+builder.Services.AddSingleton<InMemoryDatabase>();
 
 var app = builder.Build();
 
@@ -40,8 +44,10 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+// 例外ハンドラーを有効化
 app.UseExceptionHandler();
-app.UseHttpsRedirection();
+
+// Carterのエンドポイントをマッピング
 app.MapCarter();
 
 app.Run();
