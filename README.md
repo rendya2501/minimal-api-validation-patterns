@@ -74,18 +74,35 @@ src/MinimalApiValidationPatterns/
 └── Filters/
     └── ValidationFilter.cs            # エンドポイントフィルター
 
-tests/MinimalApiValidationPatterns.Tests/
-├── Behaviors/
-│   └── ValidationBehaviorTests.cs     # ユニットテスト
-├── ExceptionHandling/
-│   └── GlobalExceptionHandlerTests.cs # 例外ハンドラーテスト
-├── Features/
-│   ├── FilterValidation/
-│   │   └── FilterValidationModuleTests.cs    # 統合テスト
-│   └── PipelineValidation/
-│       └── PipelineValidationModuleTests.cs  # 統合テスト
-└── Filters/
-    └── ValidationFilterTests.cs       # フィルターテスト
+tests/
+├── MinimalApiValidationPatterns.UnitTests/         # ユニットテスト
+│   ├── Behaviors/
+│   │   └── ValidationBehaviorTests.cs
+│   ├── Filters/
+│   │   └── ValidationFilterTests.cs
+│   └── ExceptionHandling/
+│       └── GlobalExceptionHandlerTests.cs
+│
+├── MinimalApiValidationPatterns.IntegrationTests/  # 統合テスト 
+│   ├── Features/
+│   │   ├── FilterValidation/
+│   │   │   └── FilterValidationModuleTests.cs
+│   │   └── PipelineValidation/
+│   │       └── PipelineValidationModuleTests.cs
+│   └── Infrastructure/
+│       └── CustomWebApplicationFactory.cs
+│
+└── MinimalApiValidationPatterns.Tests.Shared/      # 共通項目
+    ├── Builders/
+    │   └── PostBuilder.cs             # テストデータビルダー
+    ├── Constants/
+    │   └── TestConstants.cs           # 共通定数
+    └── Extensions/
+        └── HttpResponseExtensions.cs   # 共通拡張メソッド
+
+docs/
+├── FilterVsPipeline.md                # パターン選択ガイド
+└── Troubleshooting.md                 # よくある問題と解決策
 ```
 
 ## 技術スタック
@@ -210,6 +227,12 @@ public record UpdatePostRequest(Guid Id, string Title, string Content);
 # 全テスト実行
 dotnet test
 
+# ユニットテストのみ（高速）
+dotnet test tests/MinimalApiValidationPatterns.UnitTests
+
+# 統合テストのみ
+dotnet test tests/MinimalApiValidationPatterns.IntegrationTests
+
 # カバレッジ付きテスト
 dotnet test /p:CollectCoverage=true
 
@@ -228,22 +251,21 @@ dotnet test --filter FullyQualifiedName~FilterValidationModuleTests
    - `PipelineValidationModuleTests` - Pipeline パターンのエンドツーエンドテスト
    - `GlobalExceptionHandlerTests` - 例外処理の検証
 
-## ベストプラクティス
+## どちらのパターンを選ぶべきか
 
-### いつ Endpoint Filter を使うべきか
+このプロジェクトは2つのバリデーションパターンを実装していますが、実際のプロジェクトではどちらか一方を選択することを推奨します。
 
-- シンプルなバリデーション要件
-- エンドポイント固有のルール
-- 軽量な API
-- バリデーションロジックをエンドポイントの近くに配置したい場合
+詳細な比較と選択ガイドは **[docs/FilterVsPipeline.md](docs/FilterVsPipeline.md)** を参照してください。
 
-### いつ Pipeline Behavior を使うべきか
+### クイックガイド
 
-- CQRS パターンを採用している
-- 複雑なビジネスロジック
-- 横断的なバリデーション
-- 一貫したバリデーション処理が必要
-- テスト容易性を重視
+| プロジェクト規模 | チーム経験 | 推奨 |
+|---------------|----------|------|
+| 小規模（< 10 エンドポイント） | 初心者 | **Filter** |
+| 中規模（10-50 エンドポイント） | 中級者 | **Pipeline** |
+| 大規模（50+ エンドポイント） | 経験者 | **Pipeline** |
+| マイクロサービス（単純） | - | **Filter** |
+| エンタープライズ・CQRS | - | **Pipeline** |
 
 ## パフォーマンス考慮事項
 
