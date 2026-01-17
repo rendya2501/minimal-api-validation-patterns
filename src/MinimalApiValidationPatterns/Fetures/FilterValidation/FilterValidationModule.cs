@@ -12,7 +12,8 @@ public sealed class FilterValidationModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        var endpoints = app.MapGroup("/filter-posts").WithTags("Filter"); ;
+        var endpoints = app.MapGroup("/filter-posts")
+            .WithTags("FilterValidation"); ;
 
         endpoints.MapGet("/", GetPosts)
             .WithSummary("Get all posts");
