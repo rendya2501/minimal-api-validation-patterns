@@ -33,26 +33,27 @@ public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TReq
         RequestHandlerDelegate<TResponse> next,
         CancellationToken ct)
     {
-        // この Request に対応する Validator が 1 つ以上存在するか？
-        if (validators.Any())
+        if (!validators.Any())
         {
-            // FluentValidation 用の検証コンテキストを作成
-            var context = new ValidationContext<TRequest>(request);
-            // すべての Validator を実行し、エラーを平坦化してリスト化
-            var failures = validators
-                .Select(v => v.Validate(context))   // 各 Validator で検証を実行
-                .SelectMany(r => r.Errors)          // 各 ValidationResult の Errors を 1 つの列にまとめる
-                .Where(f => f != null)              // 念のため null を除外
-                .ToList();
-
-            // 1 件でもエラーがあれば Handler を呼ばずに例外を投げる
-            if (failures.Count != 0)
-            {
-                throw new ValidationException(failures);
-            }
+            return await next(ct);
         }
 
-        // 検証を通過した場合のみ、次の処理へ進む（次の Behavior or 実際の Handler）
+        var context = new ValidationContext<TRequest>(request);
+
+        var validationResults = await Task.WhenAll(
+            validators.Select(v => v.ValidateAsync(context, ct))
+        );
+
+        var failures = validationResults
+            .Where(r => !r.IsValid)
+            .SelectMany(r => r.Errors)
+            .ToList();
+
+        if (failures.Count != 0)
+        {
+            throw new ValidationException(failures);
+        }
+
         return await next(ct);
     }
 }
