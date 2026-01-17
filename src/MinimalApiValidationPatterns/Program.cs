@@ -1,9 +1,8 @@
 using Carter;
 using FluentValidation;
-using MediatR;
+using MinimalApiValidationPatterns.Behaviors;
 using MinimalApiValidationPatterns.Data;
 using MinimalApiValidationPatterns.ExceptionHandling;
-using MinimalApiValidationPatterns.Behaviors;
 using Scalar.AspNetCore;
 using System.Reflection;
 
@@ -22,7 +21,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
 
     // パイプラインの順序が重要
-    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 
 // FluentValidation: バリデーション定義ライブラリ
