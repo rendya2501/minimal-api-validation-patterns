@@ -1,6 +1,6 @@
-﻿using RequestValidationInMinimalAPIs.Entities;
+﻿using MinimalApiValidationPatterns.Entities;
 
-namespace RequestValidationInMinimalAPIs.Data;
+namespace MinimalApiValidationPatterns.Data;
 
 public class InMemoryDatabase
 {

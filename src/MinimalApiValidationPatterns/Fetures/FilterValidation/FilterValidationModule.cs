@@ -1,9 +1,9 @@
 ﻿using Carter;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
-using RequestValidationInMinimalAPIs.Data;
-using RequestValidationInMinimalAPIs.Entities;
-using RequestValidationInMinimalAPIs.Filters;
+using MinimalApiValidationPatterns.Data;
+using MinimalApiValidationPatterns.Entities;
+using MinimalApiValidationPatterns.Filters;
 
 namespace MinimalApiValidationPatterns.Fetures.FilterValidation;
 

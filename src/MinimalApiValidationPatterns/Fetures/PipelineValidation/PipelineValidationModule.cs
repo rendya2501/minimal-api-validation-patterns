@@ -2,8 +2,8 @@
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
-using RequestValidationInMinimalAPIs.Data;
-using RequestValidationInMinimalAPIs.Entities;
+using MinimalApiValidationPatterns.Data;
+using MinimalApiValidationPatterns.Entities;
 
 namespace MinimalApiValidationPatterns.Fetures.PipelineValidation;
 

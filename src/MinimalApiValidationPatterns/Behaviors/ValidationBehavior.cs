@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 
-namespace RequestValidationInMinimalAPIs.Behaviors;
+namespace MinimalApiValidationPatterns.Behaviors;
 
 /// <summary>
 /// MediatR の Pipeline Behavior。

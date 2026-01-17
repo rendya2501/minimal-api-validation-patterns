@@ -1,26 +1,35 @@
 using Carter;
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using RequestValidationInMinimalAPIs.Behaviors;
-using RequestValidationInMinimalAPIs.Data;
+using MinimalApiValidationPatterns.Data;
+using MinimalApiValidationPatterns.ExceptionHandling;
+using MinimalApiValidationPatterns.Behaviors;
 using Scalar.AspNetCore;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
-
 builder.Services.AddCarter();
+
+// MediatRの設定
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+{
+    cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+
+    // パイプラインの順序が重要
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+});
 
 builder.Services.AddSingleton<InMemoryDatabase>();
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+// FluentValidationの設定
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+// Exception Handlerの設定
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -31,83 +40,50 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+app.UseExceptionHandler();
+app.UseHttpsRedirection();
 app.MapCarter();
 
+app.Run();
+
+// 古い例外ハンドラーの例
 //app.UseExceptionHandler(exceptionHandlerApp =>
 //{
 //    exceptionHandlerApp.Run(async context =>
 //    {
 //        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
 
-//        if (exception is ValidationException validationException)
+//        if (exception is null)
+//            return;
+
+//        var problemDetailsFactory =
+//            context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+
+//        if (exception is FluentValidation.ValidationException ve)
 //        {
+//            var modelState = new ModelStateDictionary();
+
+//            foreach (var error in ve.Errors)
+//            {
+//                modelState.AddModelError(
+//                    error.PropertyName,
+//                    error.ErrorMessage);
+//            }
+
+//            var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(
+//                context,
+//                modelState,
+//                statusCode: StatusCodes.Status400BadRequest
+//            );
+
 //            context.Response.StatusCode = StatusCodes.Status400BadRequest;
 //            context.Response.ContentType = "application/problem+json";
 
-//            var problem = new ValidationProblemDetails(
-//                validationException.Errors
-//                    .GroupBy(e => e.PropertyName)
-//                    .ToDictionary(
-//                        g => g.Key,
-//                        g => g.Select(e => e.ErrorMessage).ToArray()
-//                    )
-//            );
-//            var errors = validationException.Errors
-//               .GroupBy(e => e.PropertyName)
-//               .ToDictionary(
-//                   g => g.Key,
-//                   g => g.Select(e => e.ErrorMessage).ToArray()
-//               );
-//            var validationProblem = TypedResults.ValidationProblem(errors);
-//            await context.Response.WriteAsJsonAsync(validationProblem.ProblemDetails);
-//            // await context.Response.WriteAsJsonAsync(problem);
+//            await context.Response.WriteAsJsonAsync(problemDetails);
 //            return;
 //        }
 
 //        // その他の例外
-//        context.Response.StatusCode = 500;
+//        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 //    });
 //});
-app.UseExceptionHandler(exceptionHandlerApp =>
-{
-    exceptionHandlerApp.Run(async context =>
-    {
-        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-
-        if (exception is null) 
-            return;
-
-        var problemDetailsFactory =
-            context.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-
-        if (exception is ValidationException ve)
-        {
-            var modelState = new ModelStateDictionary();
-
-            foreach (var error in ve.Errors)
-            {
-                modelState.AddModelError(
-                    error.PropertyName,
-                    error.ErrorMessage);
-            }
-
-            var problemDetails = problemDetailsFactory.CreateValidationProblemDetails(
-                context,
-                modelState,
-                statusCode: StatusCodes.Status400BadRequest
-            );
-
-            context.Response.StatusCode =StatusCodes.Status400BadRequest;
-            context.Response.ContentType = "application/problem+json";
-
-            await context.Response.WriteAsJsonAsync(problemDetails);
-            return;
-        }
-
-        // その他の例外
-        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-    });
-});
-
-
-app.Run();

@@ -1,4 +1,4 @@
-﻿namespace RequestValidationInMinimalAPIs.Entities;
+﻿namespace MinimalApiValidationPatterns.Entities;
 
 public class Post
 {

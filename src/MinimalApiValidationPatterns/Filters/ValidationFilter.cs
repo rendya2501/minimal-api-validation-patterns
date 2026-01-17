@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace RequestValidationInMinimalAPIs.Filters;
+namespace MinimalApiValidationPatterns.Filters;
 
 public class ValidationFilter<TRequest>(IValidator<TRequest> validator) : IEndpointFilter
 {
