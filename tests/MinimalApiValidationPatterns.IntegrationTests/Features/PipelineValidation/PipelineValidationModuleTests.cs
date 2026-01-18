@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.WebUtilities;
 using MinimalApiValidationPatterns.Features.PipelineValidation;
 using MinimalApiValidationPatterns.IntegrationTests.Infrastructure;
 using MinimalApiValidationPatterns.Tests.Shared.Constants;
@@ -66,12 +67,15 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
         result!.Id.Should().NotBeEmpty();
     }
 
+    /// <summary>
+    /// Title が空の場合にバリデーションエラーが返されることを検証
+    /// </summary>
     [Fact]
     public async Task CreatePost_WithEmptyTitle_ShouldReturnValidationError()
     {
         // Arrange
         var request = new PipelineValidationModule.CreatePostRequest(
-            Title: TestConstants.TestData.EmptyString,
+            Title: string.Empty,
             Content: TestConstants.TestData.ValidContent
         );
 
@@ -82,13 +86,16 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
         await response.ShouldHavePipelineValidationErrors(TestConstants.ValidationMessages.TitleRequired);
     }
 
+    /// <summary>
+    /// Content が空の場合にバリデーションエラーが返されることを検証
+    /// </summary>
     [Fact]
     public async Task CreatePost_WithEmptyContent_ShouldReturnValidationError()
     {
         // Arrange
         var request = new PipelineValidationModule.CreatePostRequest(
             Title: TestConstants.TestData.ValidTitle,
-            Content: TestConstants.TestData.EmptyString
+            Content: string.Empty
         );
 
         // Act
@@ -98,13 +105,16 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
         await response.ShouldHavePipelineValidationErrors(TestConstants.ValidationMessages.ContentRequired);
     }
 
+    /// <summary>
+    /// Title と Content が空の場合にバリデーションエラーが返されることを検証
+    /// </summary>
     [Fact]
     public async Task CreatePost_WithMultipleInvalidFields_ShouldReturnAllErrors()
     {
         // Arrange
         var request = new PipelineValidationModule.CreatePostRequest(
-            Title: TestConstants.TestData.EmptyString,
-            Content: TestConstants.TestData.EmptyString
+            Title: string.Empty,
+            Content: string.Empty
         );
 
         // Act
@@ -126,8 +136,8 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
     {
         // Arrange
         var request = new PipelineValidationModule.CreatePostRequest(
-            Title: TestConstants.TestData.EmptyString,
-            Content: TestConstants.TestData.EmptyString
+            Title: string.Empty,
+            Content: string.Empty
         );
 
         // Act
@@ -135,7 +145,7 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
 
         // Assert
         var problemDetails = await response.ShouldBeProblemDetails();
-        problemDetails.Status.Should().Be(400);
+        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
         problemDetails.TraceId.Should().NotBeNullOrEmpty();
     }
 
@@ -158,13 +168,18 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
         var createResult = await createResponse.Content.ReadFromJsonAsync<PipelineValidationModule.CreatePostResponse>();
 
         var updateRequest = new PipelineValidationModule.UpdatePostRequest(
-            Id: createResult!.Id,
             Title: "Updated Title",
             Content: "Updated Content"
         );
+        var query = new Dictionary<string, string?>
+        {
+            { "id", createResult!.Id.ToString() }
+        };
+        // ベースURLにクエリパラメータを結合
+        var uri = QueryHelpers.AddQueryString("/pipeline-behavior-posts/", query);
 
         // Act
-        var response = await _client.PutAsJsonAsync("/pipeline-behavior-posts/", updateRequest);
+        var response = await _client.PutAsJsonAsync(uri, updateRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -178,39 +193,46 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
     {
         // Arrange
         var request = new PipelineValidationModule.UpdatePostRequest(
-            Id: Guid.NewGuid(),
             Title: "Updated Title",
             Content: "Updated Content"
         );
+        var query = new Dictionary<string, string?>
+        {
+            { "id", Guid.NewGuid().ToString() }
+        };
+        // ベースURLにクエリパラメータを結合
+        var uri = QueryHelpers.AddQueryString("/pipeline-behavior-posts/", query);
 
         // Act
-        var response = await _client.PutAsJsonAsync("/pipeline-behavior-posts/", request);
+        var response = await _client.PutAsJsonAsync(uri, request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     /// <summary>
-    /// 空の ID で Pipeline Behavior がバリデーションエラーを返すことを検証
+    /// 空の ID で Pipeline Behavior から NotFound が返されることを検証
     /// </summary>
     [Fact]
-    public async Task UpdatePost_WithEmptyId_ShouldReturnValidationError()
+    public async Task UpdatePost_WithEmptyId_ShouldReturnNotFound()
     {
         // Arrange
         var request = new PipelineValidationModule.UpdatePostRequest(
-            Id: Guid.Empty,
             Title: "Updated Title",
             Content: "Updated Content"
         );
+        var query = new Dictionary<string, string?>
+        {
+            { "id", Guid.Empty.ToString() }
+        };
+        // ベースURLにクエリパラメータを結合
+        var uri = QueryHelpers.AddQueryString("/pipeline-behavior-posts/", query);
 
         // Act
-        var response = await _client.PutAsJsonAsync("/pipeline-behavior-posts/", request);
+        var response = await _client.PutAsJsonAsync(uri, request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-
-        var problemDetails = await response.Content.ReadAsStringAsync();
-        problemDetails.Should().Contain("Id");
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     /// <summary>
@@ -219,21 +241,33 @@ public class PipelineValidationModuleTests(CustomWebApplicationFactory factory) 
     [Fact]
     public async Task UpdatePost_WithMultipleInvalidFields_ShouldReturnAllErrors()
     {
-        // Arrange
-        var request = new PipelineValidationModule.UpdatePostRequest(
-            Id: Guid.Empty,
-            Title: "",
-            Content: ""
+        // Arrange - まず投稿を作成
+        var createRequest = new PipelineValidationModule.CreatePostRequest(
+           Title: "Original Title",
+           Content: "Original Content"
+       );
+        var createResponse = await _client.PostAsJsonAsync("/pipeline-behavior-posts/", createRequest);
+        var createResult = await createResponse.Content.ReadFromJsonAsync<PipelineValidationModule.CreatePostResponse>();
+
+        var query = new Dictionary<string, string?>
+        {
+            { "id", createResult!.Id.ToString() }
+        };
+
+        var updateUri = QueryHelpers.AddQueryString("/pipeline-behavior-posts/", query);
+
+        var updateRequest = new PipelineValidationModule.UpdatePostRequest(
+            Title: string.Empty,
+            Content: string.Empty
         );
 
         // Act
-        var response = await _client.PutAsJsonAsync("/pipeline-behavior-posts/", request);
+        var response = await _client.PutAsJsonAsync(updateUri, updateRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var problemDetails = await response.Content.ReadAsStringAsync();
-        problemDetails.Should().Contain("Id");
         problemDetails.Should().Contain("Title");
         problemDetails.Should().Contain("Content");
     }

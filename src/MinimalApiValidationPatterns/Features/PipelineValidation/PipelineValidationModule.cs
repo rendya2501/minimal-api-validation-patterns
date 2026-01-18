@@ -50,10 +50,12 @@ public sealed class PipelineValidationModule : ICarterModule
     /// すべての投稿を取得するクエリ
     /// </summary>
     public record GetAllPostsQuery() : IRequest<GetPostsResponse>;
+
     /// <summary>
     /// 投稿のレスポンス
     /// </summary>
     public record PostResponse(Guid Id, string Title, string Content);
+
     /// <summary>
     /// すべての投稿のレスポンス
     /// </summary>
@@ -77,6 +79,7 @@ public sealed class PipelineValidationModule : ICarterModule
             return Task.FromResult(response);
         }
     }
+
     /// <summary>
     /// すべての投稿を取得する
     /// </summary>
@@ -97,10 +100,12 @@ public sealed class PipelineValidationModule : ICarterModule
     /// 投稿を作成するリクエスト
     /// </summary>
     public record CreatePostRequest(string Title, string Content) : IRequest<CreatePostResponse>;
+
     /// <summary>
     /// 投稿を作成するレスポンス
     /// </summary>
     public record CreatePostResponse(Guid Id);
+
     /// <summary>
     /// 投稿を作成するバリデータ
     /// </summary>
@@ -115,6 +120,7 @@ public sealed class PipelineValidationModule : ICarterModule
             RuleFor(x => x.Content).NotEmpty();
         }
     }
+
     /// <summary>
     /// 投稿を作成するハンドラ
     /// </summary>
@@ -135,10 +141,13 @@ public sealed class PipelineValidationModule : ICarterModule
             };
 
             database.Posts.Add(post);
+            
             var response = new CreatePostResponse(post.Id);
+
             return Task.FromResult(response);
         }
     }
+
     /// <summary>
     /// 投稿を作成する
     /// </summary>
@@ -155,29 +164,41 @@ public sealed class PipelineValidationModule : ICarterModule
     #endregion
 
     #region Update
+
     /// <summary>
-    /// 投稿を更新するリクエスト
+    /// 投稿更新リクエスト
     /// </summary>
-    public record UpdatePostRequest(Guid Id, string Title, string Content) : IRequest;
+    public record UpdatePostRequest(string Title, string Content);
+
     /// <summary>
-    /// 投稿を更新するバリデータ
+    /// 投稿更新コマンド
     /// </summary>
-    public class UpdatePostValidator : AbstractValidator<UpdatePostRequest>
+    public record UpdatePostCommand(Guid Id, string Title, string Content) : IRequest<UpdatePostResponse>;
+
+    /// <summary>
+    /// 投稿を作成するレスポンス
+    /// </summary>
+    public record UpdatePostResponse(Guid Id, string Title, string Content);
+
+    /// <summary>
+    /// 投稿更新バリデータ
+    /// </summary>
+    public class UpdatePostValidator : AbstractValidator<UpdatePostCommand>
     {
         /// <summary>
-        /// 投稿を更新するバリデータ
+        /// 投稿更新バリデータ
         /// </summary>
         public UpdatePostValidator()
         {
-            RuleFor(x => x.Id).NotEmpty();
             RuleFor(x => x.Title).NotEmpty();
             RuleFor(x => x.Content).NotEmpty();
         }
     }
+
     /// <summary>
-    /// 投稿を更新するハンドラ
+    /// 投稿更新ハンドラ
     /// </summary>
-    public class UpdatePostHandler(InMemoryDatabase database) : IRequestHandler<UpdatePostRequest>
+    public class UpdatePostHandler(InMemoryDatabase database) : IRequestHandler<UpdatePostCommand, UpdatePostResponse>
     {
         /// <summary>
         /// 投稿を更新する
@@ -185,15 +206,19 @@ public sealed class PipelineValidationModule : ICarterModule
         /// <param name="request">リクエスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>投稿のレスポンス</returns>
-        public Task Handle(UpdatePostRequest request, CancellationToken cancellationToken)
+        public Task<UpdatePostResponse> Handle(UpdatePostCommand command, CancellationToken cancellationToken)
         {
-            var post = database.Posts.FirstOrDefault(x => x.Id == request.Id)
+            var post = database.Posts.FirstOrDefault(x => x.Id == command.Id)
                 ?? throw new KeyNotFoundException("Post not found");
-            post.Title = request.Title.Trim();
-            post.Content = request.Content.Trim();
-            return Task.CompletedTask;
+            post.Title = command.Title.Trim();
+            post.Content = command.Content.Trim();
+
+            var response = new UpdatePostResponse(post.Id, post.Title, post.Content);
+
+            return Task.FromResult(response);
         }
     }
+
     /// <summary>
     /// 投稿を更新する
     /// </summary>
@@ -201,12 +226,14 @@ public sealed class PipelineValidationModule : ICarterModule
     /// <param name="request">リクエスト</param>
     /// <param name="ct">キャンセル用トークン</param>
     /// <returns>投稿のレスポンス</returns>
-    public static async Task<Results<NoContent, NotFound>> UpdatePost(ISender sender, UpdatePostRequest request, CancellationToken ct)
+    public static async Task<Results<Ok<UpdatePostResponse>, NotFound>> UpdatePost(ISender sender, Guid id, UpdatePostRequest request, CancellationToken ct)
     {
         try
         {
-            await sender.Send(request, ct);
-            return TypedResults.NoContent();
+            var command = new UpdatePostCommand(id, request.Title, request.Content);
+            var result = await sender.Send(command, ct);
+
+            return TypedResults.Ok(result);
         }
         catch (KeyNotFoundException)
         {

@@ -74,7 +74,7 @@ public class FilterValidationModuleTests(CustomWebApplicationFactory factory) : 
     {
         // Arrange
         var request = new FilterValidationModule.CreatePostRequest(
-            Title: TestConstants.TestData.EmptyString,
+            Title: string.Empty,
             Content: TestConstants.TestData.ValidContent
         );
 
@@ -94,7 +94,7 @@ public class FilterValidationModuleTests(CustomWebApplicationFactory factory) : 
         // Arrange
         var request = new FilterValidationModule.CreatePostRequest(
             Title: TestConstants.TestData.ValidTitle,
-            Content: TestConstants.TestData.EmptyString
+            Content: string.Empty
         );
 
         // Act
@@ -112,8 +112,8 @@ public class FilterValidationModuleTests(CustomWebApplicationFactory factory) : 
     {
         // Arrange
         var request = new FilterValidationModule.CreatePostRequest(
-            Title: TestConstants.TestData.EmptyString,
-            Content: TestConstants.TestData.EmptyString
+            Title: string.Empty,
+            Content: string.Empty
         );
 
         // Act

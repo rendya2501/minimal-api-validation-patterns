@@ -25,7 +25,6 @@ public static class TestConstants
     {
         public const string ValidTitle = "Test Post Title";
         public const string ValidContent = "Test Post Content";
-        public const string EmptyString = "";
         public const int LongTextLength = 10000;
     }
 
