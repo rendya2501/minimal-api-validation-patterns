@@ -7,8 +7,25 @@ using MinimalApiValidationPatterns.Entities;
 
 namespace MinimalApiValidationPatterns.Features.PipelineValidation;
 
+/// <summary>
+/// MediatR Pipeline Behavior パターンによるバリデーションモジュール
+/// </summary>
+/// <remarks>
+/// MediatR を使用してCQRSパターンでバリデーションを実装します。
+/// </remarks>
+/// <para><strong>特徴:</strong></para>
+/// <list type="bullet">
+/// <item>CQRSパターンとの統合</item>
+/// <item>全てのリクエストで自動的にバリデーション実行</item>
+/// <item>複雑なビジネスロジックに適している</item>
+/// <item>テストが容易</item>
+/// </list> 
 public sealed class PipelineValidationModule : ICarterModule
 {
+    /// <summary>
+    /// エンドポイントルートを登録
+    /// </summary>
+    /// <param name="app">エンドポイントルートビルダー</param>
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var endpoints = app.MapGroup("/pipeline-behavior-posts")
@@ -29,45 +46,87 @@ public sealed class PipelineValidationModule : ICarterModule
 
     #region GetAll
 
-    public record GetAllGamesQuery() : IRequest<GetPostsResponse>;
+    /// <summary>
+    /// すべての投稿を取得するクエリ
+    /// </summary>
+    public record GetAllPostsQuery() : IRequest<GetPostsResponse>;
+    /// <summary>
+    /// 投稿のレスポンス
+    /// </summary>
     public record PostResponse(Guid Id, string Title, string Content);
+    /// <summary>
+    /// すべての投稿のレスポンス
+    /// </summary>
     public record GetPostsResponse(IEnumerable<PostResponse> Posts);
 
-    public class GetPostsHandler(InMemoryDatabase database) : IRequestHandler<GetAllGamesQuery, GetPostsResponse>
+    /// <summary>
+    /// すべての投稿を取得するハンドラ
+    /// </summary>
+    public class GetPostsHandler(InMemoryDatabase database) : IRequestHandler<GetAllPostsQuery, GetPostsResponse>
     {
-        public async Task<GetPostsResponse> Handle(GetAllGamesQuery query, CancellationToken ct)
+        /// <summary>
+        /// すべての投稿を取得する
+        /// </summary>
+        /// <param name="query">クエリ</param>
+        /// <param name="ct">キャンセル用トークン</param>
+        /// <returns>投稿のレスポンス</returns>
+        public Task<GetPostsResponse> Handle(GetAllPostsQuery query, CancellationToken ct)
         {
-            return new GetPostsResponse(database.Posts.Select(s => new PostResponse(s.Id, s.Title, s.Content)));
+            var response = new GetPostsResponse(
+                database.Posts.Select(s => new PostResponse(s.Id, s.Title, s.Content)));
+            return Task.FromResult(response);
         }
     }
+    /// <summary>
+    /// すべての投稿を取得する
+    /// </summary>
+    /// <param name="sender">MediatR の送信者</param>
+    /// <param name="ct">キャンセル用トークン</param>
+    /// <returns>投稿のレスポンス</returns>
     public static async Task<Ok<GetPostsResponse>> GetPosts(ISender sender, CancellationToken ct)
     {
-        var result = await sender.Send(new GetAllGamesQuery(), ct);
+        var result = await sender.Send(new GetAllPostsQuery(), ct);
         return TypedResults.Ok(result);
     }
-
-    //public static List<Post> GetPosts(InMemoryDatabase database)
-    //{
-    //    return database.Posts;
-    //}
 
     #endregion
 
     #region Create
 
+    /// <summary>
+    /// 投稿を作成するリクエスト
+    /// </summary>
     public record CreatePostRequest(string Title, string Content) : IRequest<CreatePostResponse>;
+    /// <summary>
+    /// 投稿を作成するレスポンス
+    /// </summary>
     public record CreatePostResponse(Guid Id);
+    /// <summary>
+    /// 投稿を作成するバリデータ
+    /// </summary>
     public class CreatePostValidator : AbstractValidator<CreatePostRequest>
     {
+        /// <summary>
+        /// 投稿を作成するバリデータ
+        /// </summary>
         public CreatePostValidator()
         {
             RuleFor(x => x.Title).NotEmpty();
             RuleFor(x => x.Content).NotEmpty();
         }
     }
+    /// <summary>
+    /// 投稿を作成するハンドラ
+    /// </summary>
     public class CreatePostHandler(InMemoryDatabase database) : IRequestHandler<CreatePostRequest, CreatePostResponse>
     {
-        public async Task<CreatePostResponse> Handle(CreatePostRequest request, CancellationToken cancellationToken)
+        /// <summary>
+        /// 投稿を作成する
+        /// </summary>
+        /// <param name="request">リクエスト</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>投稿のレスポンス</returns>
+        public Task<CreatePostResponse> Handle(CreatePostRequest request, CancellationToken cancellationToken)
         {
             var post = new Post
             {
@@ -76,34 +135,38 @@ public sealed class PipelineValidationModule : ICarterModule
             };
 
             database.Posts.Add(post);
-            return new CreatePostResponse(post.Id);
+            var response = new CreatePostResponse(post.Id);
+            return Task.FromResult(response);
         }
     }
+    /// <summary>
+    /// 投稿を作成する
+    /// </summary>
+    /// <param name="sender">MediatR の送信者</param>
+    /// <param name="request">リクエスト</param>
+    /// <param name="ct">キャンセル用トークン</param>
+    /// <returns>投稿のレスポンス</returns>
     public static async Task<Ok<CreatePostResponse>> CreatePost(ISender sender, CreatePostRequest request, CancellationToken ct)
     {
         var result = await sender.Send(request, ct);
         return TypedResults.Ok(result);
     }
 
-    //public static Ok<Guid> CreatePost(CreatePostRequest request, InMemoryDatabase database)
-    //{
-    //    var post = new Post
-    //    {
-    //        Title = request.Title.Trim(),
-    //        Content = request.Content.Trim()
-    //    };
-
-    //    database.Posts.Add(post);
-    //    return TypedResults.Ok(post.Id);
-    //}
-
     #endregion
 
     #region Update
-    public record UpdatePostRequest(Guid Id, string Title, string Content) : IRequest<UpdatePostResponse>;
-    public record UpdatePostResponse;
+    /// <summary>
+    /// 投稿を更新するリクエスト
+    /// </summary>
+    public record UpdatePostRequest(Guid Id, string Title, string Content) : IRequest;
+    /// <summary>
+    /// 投稿を更新するバリデータ
+    /// </summary>
     public class UpdatePostValidator : AbstractValidator<UpdatePostRequest>
     {
+        /// <summary>
+        /// 投稿を更新するバリデータ
+        /// </summary>
         public UpdatePostValidator()
         {
             RuleFor(x => x.Id).NotEmpty();
@@ -111,43 +174,45 @@ public sealed class PipelineValidationModule : ICarterModule
             RuleFor(x => x.Content).NotEmpty();
         }
     }
-    public class UpdatePostHandler(InMemoryDatabase database) : IRequestHandler<UpdatePostRequest, UpdatePostResponse>
+    /// <summary>
+    /// 投稿を更新するハンドラ
+    /// </summary>
+    public class UpdatePostHandler(InMemoryDatabase database) : IRequestHandler<UpdatePostRequest>
     {
-        public async Task<UpdatePostResponse> Handle(UpdatePostRequest request, CancellationToken cancellationToken)
+        /// <summary>
+        /// 投稿を更新する
+        /// </summary>
+        /// <param name="request">リクエスト</param>
+        /// <param name="cancellationToken">キャンセル用トークン</param>
+        /// <returns>投稿のレスポンス</returns>
+        public Task Handle(UpdatePostRequest request, CancellationToken cancellationToken)
         {
             var post = database.Posts.FirstOrDefault(x => x.Id == request.Id)
                 ?? throw new KeyNotFoundException("Post not found");
             post.Title = request.Title.Trim();
             post.Content = request.Content.Trim();
-            return new UpdatePostResponse();
+            return Task.CompletedTask;
         }
     }
-    public static async Task<Results<Ok<UpdatePostResponse>, NotFound>> UpdatePost(ISender sender, UpdatePostRequest request, CancellationToken ct)
+    /// <summary>
+    /// 投稿を更新する
+    /// </summary>
+    /// <param name="sender">MediatR の送信者</param>
+    /// <param name="request">リクエスト</param>
+    /// <param name="ct">キャンセル用トークン</param>
+    /// <returns>投稿のレスポンス</returns>
+    public static async Task<Results<NoContent, NotFound>> UpdatePost(ISender sender, UpdatePostRequest request, CancellationToken ct)
     {
         try
         {
-            var result = await sender.Send(request, ct);
-            return TypedResults.Ok(result);
+            await sender.Send(request, ct);
+            return TypedResults.NoContent();
         }
         catch (KeyNotFoundException)
         {
             return TypedResults.NotFound();
         }
     }
-
-    //public static Results<Ok, NotFound> UpdatePost(UpdatePostRequest request, InMemoryDatabase database)
-    //{
-    //    var post = database.Posts.FirstOrDefault(x => x.Id == request.Id);
-
-    //    if (post is null)
-    //    {
-    //        return TypedResults.NotFound();
-    //    }
-
-    //    post.Title = request.Title.Trim();
-    //    post.Content = request.Content.Trim();
-    //    return TypedResults.Ok();
-    //}
 
     #endregion
 }
