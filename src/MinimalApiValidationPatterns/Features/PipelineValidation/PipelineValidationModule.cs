@@ -11,15 +11,20 @@ namespace MinimalApiValidationPatterns.Features.PipelineValidation;
 /// MediatR Pipeline Behavior パターンによるバリデーションモジュール
 /// </summary>
 /// <remarks>
-/// MediatR を使用してCQRSパターンでバリデーションを実装します。
-/// </remarks>
-/// <para><strong>特徴:</strong></para>
+/// MediatR の CQRS パターンを使用し、
+/// <see cref="ValidationBehavior{TRequest, TResponse}"/> により
+/// 自動的にバリデーションを実行します。
+/// <para>
+/// <strong>特徴:</strong>
+/// </para>
 /// <list type="bullet">
-/// <item>CQRSパターンとの統合</item>
-/// <item>全てのリクエストで自動的にバリデーション実行</item>
-/// <item>複雑なビジネスロジックに適している</item>
-/// <item>テストが容易</item>
-/// </list> 
+/// <item><description>アプリケーション層での一元的なバリデーション</description></item>
+/// <item><description>すべてのリクエストで自動実行</description></item>
+/// <item><description>CQRS パターンとの統合</description></item>
+/// <item><description>複雑なビジネスロジックに最適</description></item>
+/// <item><description>テストが容易</description></item>
+/// </list>
+/// </remarks>
 public sealed class PipelineValidationModule : ICarterModule
 {
     /// <summary>
@@ -32,17 +37,19 @@ public sealed class PipelineValidationModule : ICarterModule
             .WithTags("PipelineValidation");
 
         endpoints.MapGet("/", GetPosts)
-            .WithSummary("Get all posts");
+            .WithSummary("Get all posts")
+            .WithDescription("すべての投稿を取得します");
 
         endpoints.MapPost("/", CreatePost)
             .WithSummary("Create a new post")
+            .WithDescription("新しい投稿を作成します")
             .ProducesValidationProblem();
 
         endpoints.MapPut("/", UpdatePost)
             .WithSummary("Update an existing post")
+            .WithDescription("既存の投稿を更新します")
             .ProducesValidationProblem();
     }
-
 
     #region GetAll
 
@@ -52,27 +59,31 @@ public sealed class PipelineValidationModule : ICarterModule
     public record GetAllPostsQuery() : IRequest<GetPostsResponse>;
 
     /// <summary>
-    /// 投稿のレスポンス
+    /// 投稿レスポンス
     /// </summary>
+    /// <param name="Id">投稿ID</param>
+    /// <param name="Title">タイトル</param>
+    /// <param name="Content">本文</param>
     public record PostResponse(Guid Id, string Title, string Content);
 
     /// <summary>
-    /// すべての投稿のレスポンス
+    /// 投稿一覧レスポンス
     /// </summary>
+    /// <param name="Posts">投稿のコレクション</param>
     public record GetPostsResponse(IEnumerable<PostResponse> Posts);
 
     /// <summary>
-    /// すべての投稿を取得するハンドラ
+    /// <see cref="GetAllPostsQuery"/> のハンドラ
     /// </summary>
-    public class GetPostsHandler(InMemoryDatabase database) : IRequestHandler<GetAllPostsQuery, GetPostsResponse>
+    public class GetPostsHandler(InMemoryDatabase database)
+        : IRequestHandler<GetAllPostsQuery, GetPostsResponse>
     {
         /// <summary>
-        /// すべての投稿を取得する
+        /// クエリを処理
         /// </summary>
-        /// <param name="query">クエリ</param>
-        /// <param name="ct">キャンセル用トークン</param>
-        /// <returns>投稿のレスポンス</returns>
-        public Task<GetPostsResponse> Handle(GetAllPostsQuery query, CancellationToken ct)
+        public Task<GetPostsResponse> Handle(
+            GetAllPostsQuery query,
+            CancellationToken ct)
         {
             var response = new GetPostsResponse(
                 database.Posts.Select(s => new PostResponse(s.Id, s.Title, s.Content)));
@@ -81,12 +92,11 @@ public sealed class PipelineValidationModule : ICarterModule
     }
 
     /// <summary>
-    /// すべての投稿を取得する
+    /// すべての投稿を取得するエンドポイント
     /// </summary>
-    /// <param name="sender">MediatR の送信者</param>
-    /// <param name="ct">キャンセル用トークン</param>
-    /// <returns>投稿のレスポンス</returns>
-    public static async Task<Ok<GetPostsResponse>> GetPosts(ISender sender, CancellationToken ct)
+    public static async Task<Ok<GetPostsResponse>> GetPosts(
+        ISender sender,
+        CancellationToken ct)
     {
         var result = await sender.Send(new GetAllPostsQuery(), ct);
         return TypedResults.Ok(result);
@@ -97,22 +107,26 @@ public sealed class PipelineValidationModule : ICarterModule
     #region Create
 
     /// <summary>
-    /// 投稿を作成するリクエスト
+    /// 投稿作成コマンド
     /// </summary>
-    public record CreatePostRequest(string Title, string Content) : IRequest<CreatePostResponse>;
+    /// <param name="Title">投稿のタイトル（必須）</param>
+    /// <param name="Content">投稿の本文（必須）</param>
+    public record CreatePostRequest(string Title, string Content)
+        : IRequest<CreatePostResponse>;
 
     /// <summary>
-    /// 投稿を作成するレスポンス
+    /// 投稿作成レスポンス
     /// </summary>
+    /// <param name="Id">作成された投稿のID</param>
     public record CreatePostResponse(Guid Id);
 
     /// <summary>
-    /// 投稿を作成するバリデータ
+    /// <see cref="CreatePostRequest"/> のバリデータ
     /// </summary>
     public class CreatePostValidator : AbstractValidator<CreatePostRequest>
     {
         /// <summary>
-        /// 投稿を作成するバリデータ
+        /// コンストラクタ - バリデーションルールを定義
         /// </summary>
         public CreatePostValidator()
         {
@@ -122,17 +136,21 @@ public sealed class PipelineValidationModule : ICarterModule
     }
 
     /// <summary>
-    /// 投稿を作成するハンドラ
+    /// <see cref="CreatePostRequest"/> のハンドラ
     /// </summary>
-    public class CreatePostHandler(InMemoryDatabase database) : IRequestHandler<CreatePostRequest, CreatePostResponse>
+    public class CreatePostHandler(InMemoryDatabase database)
+        : IRequestHandler<CreatePostRequest, CreatePostResponse>
     {
         /// <summary>
-        /// 投稿を作成する
+        /// コマンドを処理
         /// </summary>
-        /// <param name="request">リクエスト</param>
-        /// <param name="cancellationToken">キャンセル用トークン</param>
-        /// <returns>投稿のレスポンス</returns>
-        public Task<CreatePostResponse> Handle(CreatePostRequest request, CancellationToken cancellationToken)
+        /// <remarks>
+        /// バリデーションは <see cref="ValidationBehavior{TRequest, TResponse}"/> 
+        /// により事前に実行されます。
+        /// </remarks>
+        public Task<CreatePostResponse> Handle(
+            CreatePostRequest request,
+            CancellationToken cancellationToken)
         {
             var post = new Post
             {
@@ -141,21 +159,21 @@ public sealed class PipelineValidationModule : ICarterModule
             };
 
             database.Posts.Add(post);
-            
-            var response = new CreatePostResponse(post.Id);
-
-            return Task.FromResult(response);
+            return Task.FromResult(new CreatePostResponse(post.Id));
         }
     }
 
     /// <summary>
-    /// 投稿を作成する
+    /// 新しい投稿を作成するエンドポイント
     /// </summary>
     /// <param name="sender">MediatR の送信者</param>
     /// <param name="request">リクエスト</param>
     /// <param name="ct">キャンセル用トークン</param>
     /// <returns>投稿のレスポンス</returns>
-    public static async Task<Ok<CreatePostResponse>> CreatePost(ISender sender, CreatePostRequest request, CancellationToken ct)
+    public static async Task<Ok<CreatePostResponse>> CreatePost(
+        ISender sender,
+        CreatePostRequest request,
+        CancellationToken ct)
     {
         var result = await sender.Send(request, ct);
         return TypedResults.Ok(result);
@@ -173,20 +191,26 @@ public sealed class PipelineValidationModule : ICarterModule
     /// <summary>
     /// 投稿更新コマンド
     /// </summary>
+    /// <param name="Id">更新対象の投稿ID（必須）</param>
+    /// <param name="Title">新しいタイトル（必須）</param>
+    /// <param name="Content">新しい本文（必須）</param>
     public record UpdatePostCommand(Guid Id, string Title, string Content) : IRequest<UpdatePostResponse>;
 
     /// <summary>
-    /// 投稿を作成するレスポンス
+    /// 投稿更新レスポンス
     /// </summary>
+    /// <param name="Id">更新後の投稿ID</param>
+    /// <param name="Title">更新後のタイトル</param>
+    /// <param name="Content">更新後の本文</param>
     public record UpdatePostResponse(Guid Id, string Title, string Content);
 
     /// <summary>
-    /// 投稿更新バリデータ
+    /// <see cref="UpdatePostCommand"/> のバリデータ
     /// </summary>
     public class UpdatePostValidator : AbstractValidator<UpdatePostCommand>
     {
         /// <summary>
-        /// 投稿更新バリデータ
+        /// コンストラクタ - バリデーションルールを定義
         /// </summary>
         public UpdatePostValidator()
         {
@@ -196,13 +220,16 @@ public sealed class PipelineValidationModule : ICarterModule
     }
 
     /// <summary>
-    /// 投稿更新ハンドラ
+    /// <see cref="UpdatePostCommand"/> のハンドラ
     /// </summary>
     public class UpdatePostHandler(InMemoryDatabase database) : IRequestHandler<UpdatePostCommand, UpdatePostResponse>
     {
         /// <summary>
-        /// 投稿を更新する
+        /// コマンドを処理
         /// </summary>
+        /// <exception cref="KeyNotFoundException">
+        /// 指定されたIDの投稿が見つからない場合
+        /// </exception>
         /// <param name="request">リクエスト</param>
         /// <param name="cancellationToken">キャンセル用トークン</param>
         /// <returns>投稿のレスポンス</returns>
@@ -220,13 +247,17 @@ public sealed class PipelineValidationModule : ICarterModule
     }
 
     /// <summary>
-    /// 投稿を更新する
+    /// 既存の投稿を更新するエンドポイント
     /// </summary>
     /// <param name="sender">MediatR の送信者</param>
     /// <param name="request">リクエスト</param>
     /// <param name="ct">キャンセル用トークン</param>
     /// <returns>投稿のレスポンス</returns>
-    public static async Task<Results<Ok<UpdatePostResponse>, NotFound>> UpdatePost(ISender sender, Guid id, UpdatePostRequest request, CancellationToken ct)
+    public static async Task<Results<Ok<UpdatePostResponse>, NotFound>> UpdatePost(
+        ISender sender,
+        Guid id,
+        UpdatePostRequest request,
+        CancellationToken ct)
     {
         try
         {

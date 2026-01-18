@@ -13,7 +13,7 @@ public class Post
     /// 投稿の一意識別子
     /// </summary>
     /// <remarks>
-    /// private init により、オブジェクト初期化時にのみ設定可能。
+    /// <c>private init</c> により、オブジェクト初期化時にのみ設定可能。
     /// デフォルトで新しい GUID が自動生成されます。
     /// </remarks>
     public Guid Id { get; private init; } = Guid.NewGuid();
@@ -22,7 +22,7 @@ public class Post
     /// 投稿のタイトル
     /// </summary>
     /// <remarks>
-    /// 必須プロパティ（required）。空文字列は許可されません。
+    /// 必須プロパティ（<c>required</c>）。空文字列は許可されません。
     /// </remarks>
     public required string Title { get; set; }
 
@@ -30,7 +30,7 @@ public class Post
     /// 投稿の本文
     /// </summary>
     /// <remarks>
-    /// 必須プロパティ（required）。空文字列は許可されません。
+    /// 必須プロパティ（<c>required</c>）。空文字列は許可されません。
     /// </remarks>
     public required string Content { get; set; }
 }
