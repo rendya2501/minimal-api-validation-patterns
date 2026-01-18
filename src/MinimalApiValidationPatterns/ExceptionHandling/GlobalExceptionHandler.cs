@@ -16,6 +16,13 @@ public class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,
     IHostEnvironment environment) : IExceptionHandler
 {
+    /// <summary>
+    /// 例外を処理
+    /// </summary>
+    /// <param name="httpContext">HTTP コンテキスト</param>
+    /// <param name="exception">例外</param>
+    /// <param name="cancellationToken">キャンセル用トークン</param>
+    /// <returns>処理が成功したかどうか</returns> 
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
@@ -42,7 +49,7 @@ public class GlobalExceptionHandler(
             errorContext,
             exception
         );
-   
+
         httpContext.Response.StatusCode = errorContext.StatusCode;
         httpContext.Response.ContentType = MediaTypeNames.Application.ProblemJson;
 
