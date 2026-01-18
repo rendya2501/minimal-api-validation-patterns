@@ -3,7 +3,7 @@ using FluentValidation;
 using MediatR;
 using MinimalApiValidationPatterns.Behaviors;
 
-namespace MinimalApiValidationPatterns.Tests.Behaviors;
+namespace MinimalApiValidationPatterns.UnitTests.Behaviors;
 
 /// <summary>
 /// ValidationBehavior のユニットテスト

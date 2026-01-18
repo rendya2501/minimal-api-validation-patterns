@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using MinimalApiValidationPatterns.Filters;
 using NSubstitute;
 
-namespace MinimalApiValidationPatterns.Tests.Filters;
+namespace MinimalApiValidationPatterns.UnitTests.Filters;
 
 /// <summary>
 /// ValidationFilter のユニットテスト

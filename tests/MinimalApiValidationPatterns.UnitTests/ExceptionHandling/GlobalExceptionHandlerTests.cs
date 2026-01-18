@@ -10,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 using MinimalApiValidationPatterns.ExceptionHandling;
 using System.Net;
 
-namespace MinimalApiValidationPatterns.Tests.ExceptionHandling;
+namespace MinimalApiValidationPatterns.UnitTests.ExceptionHandling;
 
 /// <summary>
 /// GlobalExceptionHandler のテスト
