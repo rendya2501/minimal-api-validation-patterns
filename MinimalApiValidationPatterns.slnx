@@ -1,10 +1,14 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MinimalApiValidationPatterns/MinimalApiValidationPatterns.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MinimalApiValidationPatterns.IntegrationTests/MinimalApiValidationPatterns.IntegrationTests.csproj" Id="281b94e2-b3be-4641-963e-56d183b64df8" />
+    <Project Path="tests/MinimalApiValidationPatterns.Tests.Shared/MinimalApiValidationPatterns.Tests.Shared.csproj" Id="f958860d-bb84-4cff-bd27-94a18b52fa6b" />
+    <Project Path="tests/MinimalApiValidationPatterns.UnitTests/MinimalApiValidationPatterns.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/ソリューション項目/">
     <File Path="docs/FilterVsPipeline.md" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="src/MinimalApiValidationPatterns/MinimalApiValidationPatterns.csproj" />
-  <Project Path="tests/MinimalApiValidationPatterns.IntegrationTests/MinimalApiValidationPatterns.IntegrationTests.csproj" Id="281b94e2-b3be-4641-963e-56d183b64df8" />
-  <Project Path="tests/MinimalApiValidationPatterns.Tests.Shared/MinimalApiValidationPatterns.Tests.Shared.csproj" Id="f958860d-bb84-4cff-bd27-94a18b52fa6b" />
-  <Project Path="tests/MinimalApiValidationPatterns.UnitTests/MinimalApiValidationPatterns.UnitTests.csproj" />
 </Solution>
