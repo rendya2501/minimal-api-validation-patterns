@@ -5,7 +5,7 @@ using MinimalApiValidationPatterns.Data;
 using MinimalApiValidationPatterns.Entities;
 using MinimalApiValidationPatterns.Filters;
 
-namespace MinimalApiValidationPatterns.Fetures.FilterValidation;
+namespace MinimalApiValidationPatterns.Features.FilterValidation;
 
 public sealed class FilterValidationModule : ICarterModule
 {

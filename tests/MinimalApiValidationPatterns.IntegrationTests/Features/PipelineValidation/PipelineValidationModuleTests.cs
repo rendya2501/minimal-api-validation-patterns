@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using MinimalApiValidationPatterns.Fetures.PipelineValidation;
+using MinimalApiValidationPatterns.Features.PipelineValidation;
 using MinimalApiValidationPatterns.IntegrationTests.Infrastructure;
 using MinimalApiValidationPatterns.Tests.Shared.Constants;
 using MinimalApiValidationPatterns.Tests.Shared.Extensions;

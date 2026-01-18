@@ -1,12 +1,11 @@
-﻿using System.Net;
-using System.Net.Http.Json;
-using FluentAssertions;
+﻿using FluentAssertions;
 using MinimalApiValidationPatterns.Entities;
-using MinimalApiValidationPatterns.Fetures.FilterValidation;
+using MinimalApiValidationPatterns.Features.FilterValidation;
 using MinimalApiValidationPatterns.IntegrationTests.Infrastructure;
-using MinimalApiValidationPatterns.Tests.Shared.Builders;
 using MinimalApiValidationPatterns.Tests.Shared.Constants;
 using MinimalApiValidationPatterns.Tests.Shared.Extensions;
+using System.Net;
+using System.Net.Http.Json;
 
 namespace MinimalApiValidationPatterns.IntegrationTests.Features.FilterValidation;
 

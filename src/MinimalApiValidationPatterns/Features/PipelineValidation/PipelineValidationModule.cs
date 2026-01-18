@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using MinimalApiValidationPatterns.Data;
 using MinimalApiValidationPatterns.Entities;
 
-namespace MinimalApiValidationPatterns.Fetures.PipelineValidation;
+namespace MinimalApiValidationPatterns.Features.PipelineValidation;
 
 public sealed class PipelineValidationModule : ICarterModule
 {
