@@ -292,3 +292,5 @@ dotnet test --filter FullyQualifiedName~FilterValidationModuleTests
 - [ASP.NET Core Minimal APIs](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis)
 - [RFC 9110 - HTTP Semantics](https://tools.ietf.org/html/rfc9110)
 - [Problem Details for HTTP APIs (RFC 7807)](https://tools.ietf.org/html/rfc7807)
+- [Request Validation in .NET / C# Minimal APIs](https://www.youtube.com/watch?v=1qJTVcR1VN8)  
+- Original sample by [jonowilliams26](https://github.com/jonowilliams26/youtube-videos/tree/main/RequestValidationInMinimalAPIs)
